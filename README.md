@@ -12,8 +12,7 @@ Uses the Python `jsf` package in R through `reticulate` in a Quarto report.
 An R package that wraps the Python JSF code using `reticulate`.
 - **Run Unit Tests:** `devtools::test("jsfR")`
 - **Compile Documentation:** `devtools::document("jsfR")`
-- **Install it:** `devtools::install("jsfR")`
-- **Features:** Loads Python modules safely, validates inputs, converts data between R and Python, and skips Python code on CRAN if needed.
+- **Features:** Loads Python modules safely, validates inputs rigorously, seamlessly translates complex array structures between R and Python in the background, and provides integrated `ggplot2` mapping functions for visualization.
 
 ### 3. Hard Test: Gillespie SSA Comparison
 
@@ -24,6 +23,20 @@ Compares an exact R simulator (Gillespie SSA) against JSF output to measure diff
   source("hard_test.R")
   ```
 - **Output:** Runs simulations, caches 3,000 Python JSF calls, saves comparison plots to `output/`, and creates a CSV file with results.
+
+#### Resulting Comparisons:
+
+**1. Overlaying Individual Trajectories**
+*(Gillespie SSA vs JSF vs analytical Mean-Field)*
+<img src="images/01_trajectories.png" width="500">
+
+**2. Absolute Error Over Time**
+*(Mathematical difference between R and Python simulators over the simulation horizon)*
+<img src="images/02_error_vs_time.png" width="500">
+
+**3. Parameter Sweep RMSE Heatmap**
+*(Computing algorithmic error across varying growth/death rates)*
+<img src="images/03_error_heatmap.png" width="500">
 
 ## Requirements
 

@@ -22,4 +22,4 @@ __pycache__/
 !docs/**
 
 # Generated test outputs
-hard_test/output/
+output/
