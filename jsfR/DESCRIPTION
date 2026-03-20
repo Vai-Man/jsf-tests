@@ -1,0 +1,30 @@
+Package: jsfR
+Title: R Interface to the Jump-Switch-Flow Stochastic Simulator
+Version: 0.1.0
+Authors@R: 
+    person("Vaibhav", "Manihar", email = "vaibhav.manihar@gmail.com",
+           role = c("aut", "cre"))
+Description: Provides an R wrapper around the Python 'jsf' package for
+    hybrid stochastic-deterministic simulation of compartmental models. The
+    Jump-Switch-Flow (JSF) algorithm dynamically switches compartments
+    between discrete (Continuous Time Markov Chain) and continuous (ODE)
+    representations based on population-size thresholds. This package uses
+    'reticulate' to call the Python implementation from R.
+License: MIT + file LICENSE
+URL: https://github.com/DGermano8/jsf
+BugReports: https://github.com/DGermano8/jsf/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: 
+    reticulate (>= 1.34)
+Suggests: 
+    testthat (>= 3.0.0),
+    ggplot2
+Config/reticulate:
+  list(
+    packages = list(
+      list(package = "jsf", pip = TRUE)
+    )
+  )
+Config/testthat/edition: 3

@@ -1,0 +1,23 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+.DS_Store
+
+# Package builds
+*.tar.gz
+*.Rcheck/
+
+# Python caching
+__pycache__/
+*.pyc
+
+# Quarto / Notebooks
+/.quarto/
+*_cache/
+*_files/
+*.html
+
+# Generated test outputs
+hard_test/output/
