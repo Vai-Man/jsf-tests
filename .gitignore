@@ -17,6 +17,9 @@ __pycache__/
 /.quarto/
 *_cache/
 *_files/
+*.html
+!docs/
+!docs/**
 
 # Generated test outputs
 hard_test/output/
