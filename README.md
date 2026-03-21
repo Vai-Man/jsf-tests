@@ -4,6 +4,11 @@
 
 Uses the Python `jsf` package in R through `reticulate` in a Quarto report.
 - **View Live:** [https://vai-man.github.io/jsf-tests/example.html](https://vai-man.github.io/jsf-tests/example.html)
+- **Install Quarto (if needed):**
+  ```r
+  install.packages("quarto")
+  quarto::install_quarto()
+  ```
 - **Run it:** Open `example.qmd` in RStudio and click "Render" (or run `quarto::quarto_render("example.qmd")`).
 - **Features:** Simulates a Birth-Death process and a Lotka-Volterra predator-prey system with graphs and mean-field comparisons.
 
@@ -40,9 +45,15 @@ Compares an exact R simulator (Gillespie SSA) against JSF output to measure diff
 
 ## Requirements
 
-R `4.1+`, Python `3.8+`, and the following packages:
+R `4.1+`, Python `3.8+`, Quarto, and the following R packages:
 ```r
 install.packages(c("reticulate", "ggplot2", "testthat", "devtools"))
+```
+
+To install Quarto in R:
+```r
+install.packages("quarto")
+quarto::install_quarto()
 ```
 
 ## Setup

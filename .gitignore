@@ -21,6 +21,8 @@ __pycache__/
 *_cache/
 *_files/
 *.html
+
+# Allow only published site
 !docs/
 !docs/**
 
