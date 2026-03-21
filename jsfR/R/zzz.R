@@ -1,6 +1,26 @@
 .jsf_env <- new.env(parent = emptyenv())
 
 .onLoad <- function(libname, pkgname) {
+  # Set up project-specific virtualenv
+  venv_path <- file.path(getwd(), ".venv")
+  
+  # Auto-create virtualenv if it doesn't exist
+  if (!dir.exists(venv_path)) {
+    message("Creating project-specific virtualenv at: ", venv_path)
+    tryCatch(
+      reticulate::virtualenv_create(venv_path),
+      error = function(e) {
+        warning("Failed to create virtualenv: ", e$message, "\n",
+                "Falling back to default Python environment.")
+      }
+    )
+  }
+  
+  # Use the project virtualenv
+  if (dir.exists(venv_path)) {
+    reticulate::use_virtualenv(venv_path, required = FALSE)
+  }
+  
   .jsf_env$jsf <- NULL
   .jsf_env$random <- NULL
 }

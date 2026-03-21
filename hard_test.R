@@ -1,12 +1,4 @@
-# ======================================================================
-# hard_test.R
-# Script to run the Gillespie SSA vs JSF Comparison Test
-# ======================================================================
-# Note: This heavily relies on the stochastic capabilities and error
-# metrics now natively embedded in the `jsfR` package.
-# ======================================================================
-
-# Load the jsfR package
+# To run the Gillespie SSA vs JSF Comparison Test
 library(jsfR)
 library(ggplot2)
 
@@ -81,4 +73,4 @@ ggsave(file.path(OUT_DIR, "03_error_heatmap.png"), p3,
        width = 8, height = 7, dpi = 300)
 cat("  → Saved 03_error_heatmap.png\n")
 
-cat("\n✓ All done. Output in:", normalizePath(OUT_DIR), "\n")
+cat("\nAll done. Output in:", normalizePath(OUT_DIR), "\n")

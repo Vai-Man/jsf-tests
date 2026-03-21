@@ -44,3 +44,10 @@ R `4.1+`, Python `3.8+`, and the following packages:
 ```r
 install.packages(c("reticulate", "ggplot2", "testthat", "devtools"))
 ```
+
+## Setup
+
+When you load the `jsfR` package for the first time, it automatically:
+1. Creates a project-specific virtualenv at `.venv/`
+2. Uses this isolated Python environment (not your system Python)
+3. Installs the Python `jsf` package with: `jsfR::install_jsf()`
