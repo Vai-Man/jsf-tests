@@ -1,3 +1,10 @@
+#' Plotting functions for JSF simulation results
+#'
+#' Functions to visualize trajectories, error heatmaps, and error comparisons
+#' from JSF and SSA simulations.
+#'
+#' @keywords internal
+
 library(ggplot2)
 
 #' Custom theme for all plots

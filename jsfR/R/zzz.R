@@ -1,33 +1,23 @@
+#' Package initialization and JSF module management
+#'
+#' Internal functions for lazy-loading and caching the Python jsf module
+#' at package startup.
+#'
+#' @keywords internal
+
 .jsf_env <- new.env(parent = emptyenv())
 
 .onLoad <- function(libname, pkgname) {
-  # Set up project-specific virtualenv
-  venv_path <- file.path(getwd(), ".venv")
-  
-  # Auto-create virtualenv if it doesn't exist
-  if (!dir.exists(venv_path)) {
-    message("Creating project-specific virtualenv at: ", venv_path)
-    tryCatch(
-      reticulate::virtualenv_create(venv_path),
-      error = function(e) {
-        warning("Failed to create virtualenv: ", e$message, "\n",
-                "Falling back to default Python environment.")
-      }
-    )
-  }
-  
-  # Use the project virtualenv
-  if (dir.exists(venv_path)) {
-    reticulate::use_virtualenv(venv_path, required = FALSE)
-  }
-  
   .jsf_env$jsf <- NULL
   .jsf_env$random <- NULL
 }
 
-#' Ensure the Python jsf module is available. Lazily imports and caches the module.
-#' @return 
-#' @keywords
+#' Ensure the Python jsf module is available
+#'
+#' Lazily imports and caches the module.
+#'
+#' @return Python `jsf` module (invisible).
+#' @keywords internal
 ensure_jsf <- function() {
   if (is.null(.jsf_env$jsf)) {
     if (!reticulate::py_module_available("jsf")) {
