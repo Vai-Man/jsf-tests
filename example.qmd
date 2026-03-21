@@ -1,292 +1,243 @@
 ---
 title: "Jump-Switch-Flow (JSF) Demonstration"
-subtitle: "Using the Python jsf package via reticulate in R"
+subtitle: "Python package usage demonstration"
 author: "Vaibhav Manihar"
 date: today
 format:
   html:
     theme: cosmo
     toc: true
-    toc-depth: 3
     code-fold: false
-    code-tools: true
-    self-contained: true
+jupyter: python3
+execution:
+  warning: false
 ---
 
 ## Overview
 
-The **Jump-Switch-Flow (JSF)** algorithm is a hybrid stochastic-deterministic 
-simulator for compartmental models. It couples Continuous Time Markov Chains 
-(CTMCs) with Ordinary Differential Equations (ODEs), allowing compartments to 
-dynamically switch between discrete ("jumping") and continuous ("flowing") 
-representations based on population size thresholds.
+This document demonstrates the usage of the python `jsf` package as demonstrated in the official [Jump-Switch-Flow Sphinx Documentation](https://github.com/DGermano8/jsf/blob/main/source/index.rst).
 
-This document demonstrates how to use the Python `jsf` package from R via 
-`reticulate`.
+The JSF process dynamically captures stochasticity at low populations (via Gillespie SSA) and scales computing efficiency at high populations (via ODE mean-field flows).
 
-## Setup
+## 1. Birth-Death Process (Single Compartment)
 
-We first configure `reticulate` to use an appropriate Python environment, 
-install `jsf` if needed, and import required packages.
+Before simulating complex multi-species boundaries, we demonstrate the JSF process on the most fundamental compartmental model: a population undergoing constant growth ($\lambda$) and death ($\mu$). 
 
-```{r setup, message=FALSE, warning=FALSE}
-# Load R packages
-library(reticulate)
-library(ggplot2)
+This tests the fundamental architecture of the jump-switch mechanism across a single stochastic threshold.
 
-# Determine if we have a local copy of jsf, otherwise install from GitHub
-local_jsf <- file.path(getwd(), "jsf")
+### Configuration
 
-if (dir.exists(local_jsf)) {
-  jsf_pkg <- normalizePath(local_jsf, winslash = "/")
-  # Ensure the local module is prioritised in Python's path to avoid shadowing
-  sys <- import("sys")
-  py_run_string(sprintf("import sys\nsys.path.insert(0, r'%s')", jsf_pkg))
-} else {
-  jsf_pkg <- "git+https://github.com/DGermano8/jsf.git"
+```{python}
+import pandas as pd
+import random
+import matplotlib.pyplot as plt
+import jsf
+
+random.seed(42)
+
+# Initial populations: 5
+x0_bd = [5]
+
+# Rates: lambda=1.0, mu=0.5
+birth_rate, death_rate = 1.0, 0.5
+rates_bd = lambda x, t: [birth_rate * x[0], death_rate * x[0]]
+
+# Stoichiometry
+reactant_bd = [[1], [1]]
+product_bd  = [[2], [0]]
+nu_bd = [[a - b for a, b in zip(p, r)] for p, r in zip(product_bd, reactant_bd)]
+
+stoich_bd = {
+    "nu": nu_bd,
+    "DoDisc": [1],
+    "nuReactant": reactant_bd,
+    "nuProduct": product_bd
 }
 
-# Install required numerical libraries into the active Reticulate environment
-py_install(c("numpy", "pandas", "matplotlib", "python-libsbml"), pip = TRUE)
-if (!py_module_available("jsf")) {
-  py_install(jsf_pkg, pip = TRUE)
+my_opts_bd = {
+    "EnforceDo": [0],
+    "dt": 0.01,
+    "SwitchingThreshold": [10]
+}
+```
+
+### Simulation & Visualization
+
+We simulate until $t=6.0$ to watch the trace confidently cross the threshold dividing the discrete (stochastic jumps) and continuous (smooth ODE) regimes.
+
+```{python}
+sim_bd = jsf.jsf(x0_bd, rates_bd, stoich_bd, 6.0, config=my_opts_bd, method="operator-splitting")
+
+plt.figure(figsize=(9, 4))
+plt.step(sim_bd[1], sim_bd[0][0], label="Population", color="#2ca02c", linewidth=1.5, where="post")
+plt.axhline(y=my_opts_bd["SwitchingThreshold"][0], color="k", linestyle="--", alpha=0.5, label="Switch Threshold (N=10)")
+plt.title("Birth-Death Process", fontweight="bold")
+plt.xlabel("Time")
+plt.ylabel("Population size")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+## 2. Lotka-Volterra Predator-Prey Model
+
+We construct the classic predator-prey system to demonstrate the framework's ability to seamlessly bridge discrete and continuous regimes.
+
+The mathematical formulation for this model is:
+$$ \frac{\mathrm{d} V_1}{\mathrm{d} t} = \alpha V_1 - \beta V_1 V_2 $$
+$$ \frac{\mathrm{d} V_2}{\mathrm{d} t} = \beta V_1 V_2 - \gamma V_2 $$
+
+### 1. Initialization
+
+First, we set up our Python environment constraints exactly as defined in the official JSF docs.
+
+```{python}
+import pandas as pd
+import random
+import matplotlib.pyplot as plt
+import jsf
+
+random.seed(42)
+
+# Initial populations: 50 Prey, 10 Predators
+x0 = [50, 10]
+
+# System parameters
+mA = 2.00
+mB = 0.05
+mC = 1.50
+
+# Rate definitions
+rates = lambda x, _: [mA * x[0],
+                      mC * x[1],
+                      mB * x[0] * x[1]]
+
+# Stoichiometry arrays
+reactant_matrix = [[1 , 0],
+                   [0 , 1],
+                   [1 , 1]]
+
+product_matrix = [[2 , 0],
+                  [0 , 0],
+                  [0 , 2]]
+
+t_max = 10
+```
+
+### 2. Configure JSF Properties
+
+We construct the specific `stoich` and `my_opts` dictionaries required by the `jsf` underlying simulator. Note that `SwitchingThreshold` is set to `30` for both compartments to trigger the CTMC/ODE regime swap.
+
+```{python}
+stoich = {
+    "nu": [ [a - b for a, b in zip(r1, r2)] 
+            for r1, r2 in zip(product_matrix, reactant_matrix) ],
+    "DoDisc": [1, 1],
+    "nuReactant": reactant_matrix,
+    "nuProduct": product_matrix,
 }
 
-# Clear any cached imports to ensure the correct module is loaded
-py_run_string("import sys\nif 'jsf' in sys.modules:\n    del sys.modules['jsf']")
-
-# Import Python modules into R
-jsf    <- import("jsf")
-random <- import("random")
+my_opts = {
+    "EnforceDo": [0, 0], 
+    "dt": 0.01,
+    "SwitchingThreshold": [30, 30]
+}
 ```
 
-## Birth-Death Process — A Simple Example
+### 3. Simulate and Visualize
 
-A birth-death process models a population where individuals are born at rate 
-$\lambda$ and die at rate $\mu$. Its stoichiometry is:
+We execute the target `jsf.jsf` operator splitting method and plot using standard matplotlib structures mapped natively against the 30-population switching threshold boundary.
 
-| Reaction | Reactant | Product | Net change |
-|----------|----------|---------|------------|
-| Birth    | 1 species | 2 species | +1       |
-| Death    | 1 species | 0 species | −1       |
+```{python}
+sim = jsf.jsf(x0, rates, stoich, t_max, config=my_opts, method="operator-splitting")
 
-### Define the model
+plt.figure(figsize=(9, 5))
+plt.plot(sim[1], sim[0][0], label="Prey", color="#1f77b4")
+plt.plot(sim[1], sim[0][1], label="Predator", color="#ff7f0e")
+plt.axhline(y=my_opts["SwitchingThreshold"][1], color="k", linestyle="--", alpha=0.6, label="Switch Threshold")
+plt.title("Lotka-Volterra Predator-Prey Interaction", fontweight="bold")
+plt.xlabel("Time")
+plt.ylabel("Population size")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
 
-```{r birth-death-model}
-# Initial population
-x0 <- list(5L)
+## 3. SIS Infectious Disease Model
 
-# Rates: birth=1.0, death=0.5 → net growth rate = 0.5
-birth_rate <- 1.0
-death_rate <- 0.5
+The JSF documentation explicitly cites the **SIS (Susceptible-Infected-Susceptible) model** as its primary epidemiological example, defining it via an SBML file representation. 
 
-# Rate function (Python-callable via reticulate)
-rates <- function(x, t) {
-  list(birth_rate * x[[1]], death_rate * x[[1]])
+We mathematically translate their SBML structure into a native Python dictionary simulation to capture its stochastic extinction dynamics. This represents the most critical use case for JSF: disease modeling near elimination boundaries where standard ODEs falsely predict continuous fractional infections instead of true stochastic extinction.
+
+### Configuration & Simulation
+
+```{python}
+import numpy as np
+import random
+
+# We use seed 1 here so the disease successfully escapes initial extinction
+random.seed(1)
+np.random.seed(1)
+
+# Initial population: 997 Susceptible, 3 Infected
+x0_sis = [997, 3]
+
+# Disease rates from index.rst SBML example
+beta_sis  = 0.002
+gamma_sis = 1.0
+
+# Rate definition
+rates_sis = lambda x, t: [
+    beta_sis * x[0] * x[1],   # Infection
+    gamma_sis * x[1]          # Recovery
+]
+
+# Reactants: S+I -> I+I, I -> S
+reactant_sis = [[1, 1], [0, 1]]
+product_sis  = [[0, 2], [1, 0]]
+nu_sis = [[a - b for a, b in zip(p, r)] for p, r in zip(product_sis, reactant_sis)]
+
+stoich_sis = {
+    "nu": nu_sis,
+    "DoDisc": [0, 1],  # We exclusively track 'Infected' state discretely
+    "nuReactant": reactant_sis,
+    "nuProduct": product_sis
 }
 
-# Stoichiometric matrices
-nu_reactants <- list(list(1L), list(1L))
-nu_products  <- list(list(2L), list(0L))
-
-# Net stoichiometry (product − reactant)
-nu <- lapply(seq_along(nu_products), function(i) {
-  mapply(function(a, b) as.integer(a - b),
-         nu_products[[i]], nu_reactants[[i]], SIMPLIFY = FALSE)
-})
-
-stoich <- list(
-  nu          = nu,
-  DoDisc      = list(1L),
-  nuReactant  = nu_reactants,
-  nuProduct   = nu_products
-)
-
-# Simulation options
-my_opts <- list(
-  EnforceDo          = list(0L),
-  dt                 = 0.01,
-  SwitchingThreshold = list(10L)
-)
-
-t_max <- 6.0
-```
-
-### Run a single trajectory
-
-```{r single-sim}
-random$seed(42L)
-sim <- jsf$jsf(x0, rates, stoich, t_max,
-               config = my_opts, method = "operator-splitting")
-
-# Extract time and population vectors
-times <- unlist(sim[[2]])
-pop   <- unlist(sim[[1]][[1]])
-
-cat("Simulation produced", length(times), "time points\n")
-cat("Final population:", tail(pop, 1), "\n")
-```
-
-### Plot the trajectory
-
-```{r plot-single, fig.width=8, fig.height=4.5}
-df_single <- data.frame(time = times, population = pop)
-
-ggplot(df_single, aes(x = time, y = population)) +
-  geom_step(colour = "#2c7bb6", linewidth = 0.6) +
-  geom_hline(yintercept = 10, linetype = "dashed", colour = "grey40") +
-  annotate("text", x = 0.2, y = 11.5,
-           label = "Switching threshold", hjust = 0, size = 3.2) +
-  labs(title = "Birth-Death Process — Single JSF Trajectory",
-       subtitle = paste0("λ = ", birth_rate, ", μ = ", death_rate,
-                         ", X0 = ", x0[[1]]),
-       x = "Time", y = "Population size") +
-  theme_minimal(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"))
-```
-
-## Multiple Trajectories and Mean-Field Comparison
-
-The **mean-field (deterministic) solution** for a birth-death process is 
-$X(t) = X_0 \, e^{(\lambda - \mu)\,t}$. We run several stochastic 
-trajectories and compare their average to this analytical solution.
-
-```{r multi-sim, cache=TRUE}
-set.seed(123)
-n_reps <- 100
-
-sims <- lapply(seq_len(n_reps), function(i) {
-  random$seed(as.integer(i * 7919L))
-  s <- jsf$jsf(x0, rates, stoich, t_max,
-               config = my_opts, method = "operator-splitting")
-  data.frame(
-    time = unlist(s[[2]]),
-    pop  = unlist(s[[1]][[1]]),
-    rep  = i
-  )
-})
-
-df_all <- do.call(rbind, sims)
-cat("Total data points:", nrow(df_all), "\n")
-```
-
-### Compute ensemble average on a regular grid
-
-```{r ensemble-avg}
-grid_times <- seq(0, t_max, by = 0.05)
-
-# For each replicate, interpolate onto the common grid
-avg_pop <- sapply(grid_times, function(tg) {
-  vals <- sapply(seq_len(n_reps), function(i) {
-    sub <- sims[[i]]
-    idx <- max(which(sub$time <= tg))
-    sub$pop[idx]
-  })
-  mean(vals, na.rm = TRUE)
-})
-
-# Mean-field solution
-mf_pop <- x0[[1]] * exp((birth_rate - death_rate) * grid_times)
-
-df_avg <- data.frame(
-  time     = grid_times,
-  avg_jsf  = avg_pop,
-  mean_field = mf_pop
-)
-```
-
-### Plot: Trajectories + Mean-Field
-
-```{r plot-multi, fig.width=9, fig.height=5}
-ggplot() +
-  # Individual trajectories (light blue)
-  geom_step(data = df_all, aes(x = time, y = pop, group = rep),
-            colour = "#abd9e9", alpha = 0.25, linewidth = 0.3) +
-  # Ensemble average
-  geom_line(data = df_avg, aes(x = time, y = avg_jsf, colour = "JSF average"),
-            linewidth = 1) +
-  # Mean-field
-  geom_line(data = df_avg, aes(x = time, y = mean_field, colour = "Mean-field"),
-            linewidth = 1, linetype = "dashed") +
-  scale_colour_manual(values = c("JSF average" = "#d7191c",
-                                 "Mean-field"  = "black")) +
-  labs(title = "Birth-Death: 100 JSF Trajectories vs Mean-Field Solution",
-       x = "Time", y = "Population size", colour = NULL) +
-  theme_minimal(base_size = 13) +
-  theme(legend.position = c(0.15, 0.85),
-        plot.title = element_text(face = "bold"))
-```
-
-## Lotka-Volterra Predator-Prey Model
-
-As a richer example, we simulate the classic predator-prey system using JSF.
-
-```{r lotka-volterra}
-x0_lv <- list(50L, 10L)
-
-mA <- 2.00   # prey birth rate
-mB <- 0.05   # predation rate
-mC <- 1.50   # predator death rate
-
-rates_lv <- function(x, t) {
-  list(mA * x[[1]], mC * x[[2]], mB * x[[1]] * x[[2]])
+opts_sis = {
+    "EnforceDo": [0, 0],
+    "dt": 0.05,
+    "SwitchingThreshold": [1000, 15]  # Force stochastic for < 15 infected
 }
 
-nu_react_lv  <- list(list(1L, 0L), list(0L, 1L), list(1L, 1L))
-nu_prod_lv   <- list(list(2L, 0L), list(0L, 0L), list(0L, 2L))
+# Run simulation
+sim_sis = jsf.jsf(x0_sis, rates_sis, stoich_sis, 10.0, config=opts_sis, method="operator-splitting")
 
-nu_lv <- lapply(seq_along(nu_prod_lv), function(i) {
-  mapply(function(a, b) as.integer(a - b),
-         nu_prod_lv[[i]], nu_react_lv[[i]], SIMPLIFY = FALSE)
-})
+t_sis = np.array(sim_sis[1])
+S_sis = np.array(sim_sis[0][0])
+I_sis = np.array(sim_sis[0][1])
 
-stoich_lv <- list(
-  nu         = nu_lv,
-  DoDisc     = list(1L, 1L),
-  nuReactant = nu_react_lv,
-  nuProduct  = nu_prod_lv
-)
+fig, ax = plt.subplots(figsize=(9, 4.5))
+ax.plot(t_sis, S_sis, color="#1f77b4", label="Susceptible", linewidth=1.5)
+ax.step(t_sis, I_sis, color="#d62728", label="Infected", linewidth=2.0, where="post")
 
-opts_lv <- list(
-  EnforceDo          = list(0L, 0L),
-  dt                 = 0.01,
-  SwitchingThreshold = list(30L, 30L)
-)
+ax.axhline(y=opts_sis["SwitchingThreshold"][1], color="k", linestyle="--", alpha=0.5, label="Switch Threshold (Infected)")
 
-random$seed(42L)
-sim_lv <- jsf$jsf(x0_lv, rates_lv, stoich_lv, 10.0,
-                  config = opts_lv, method = "operator-splitting")
-
-df_lv <- data.frame(
-  time     = unlist(sim_lv[[2]]),
-  prey     = unlist(sim_lv[[1]][[1]]),
-  predator = unlist(sim_lv[[1]][[2]])
-)
+ax.set_title("SIS Infectious Disease Model", fontweight="bold")
+ax.set_xlabel("Time (Days)")
+ax.set_ylabel("Population Size")
+ax.legend(loc="right")
+ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.show()
 ```
 
-```{r plot-lv, fig.width=9, fig.height=5}
-library(tidyr)
+## Conclusion
 
-df_lv_long <- pivot_longer(df_lv, cols = c(prey, predator),
-                           names_to = "species", values_to = "count")
+The Jump-Switch-Flow algorithm excels by intelligently balancing stochastic accuracy with deterministic computational speed. By setting specific `SwitchingThreshold` boundaries:
 
-ggplot(df_lv_long, aes(x = time, y = count, colour = species)) +
-  geom_step(linewidth = 0.5) +
-  geom_hline(yintercept = 30, linetype = "dashed", colour = "grey50") +
-  annotate("text", x = 0.2, y = 33,
-           label = "Switching threshold", hjust = 0, size = 3.2) +
-  scale_colour_manual(values = c(prey = "#1a9850", predator = "#d73027"),
-                      labels = c("Predator", "Prey")) +
-  labs(title = "Lotka-Volterra Predator-Prey — JSF Simulation",
-       x = "Time", y = "Population size", colour = NULL) +
-  theme_minimal(base_size = 13) +
-  theme(legend.position = c(0.85, 0.85),
-        plot.title = element_text(face = "bold"))
-```
-
-## Session Info
-
-```{r session-info}
-sessionInfo()
-py_config()
-```
+- **Birth-Death:** Demonstrates the fundamental ability of the algorithm to switch a single compartment's simulation regime based on a single threshold.
+- **Lotka-Volterra:** Showcases JSF preserving crucial stochastic extinctions in multi-compartmental systems that mean-field ODEs would otherwise force into an impossible, infinite limit-cycle.
+- **SIS Disease Dynamics:** Utilizes JSF's `DoDisc` vector to exclusively track the crucial "Infected" compartment discretely at low numbers, accurately capturing stochastic disease elimination without breaking the performance of macroscopic Susceptible flows.

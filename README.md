@@ -2,7 +2,7 @@
 
 ### 1. Easy Test: `example.qmd`
 
-Uses the Python `jsf` package in R through `reticulate` in a Quarto report.
+Demonstrates the native Python usage of the original `jsf` package via a Python-executed Jupyter Quarto report.
 - **View Live:** [https://vai-man.github.io/jsf-tests/example.html](https://vai-man.github.io/jsf-tests/example.html)
 - **Install Quarto (if needed):**
   ```r
@@ -10,7 +10,7 @@ Uses the Python `jsf` package in R through `reticulate` in a Quarto report.
   quarto::install_quarto()
   ```
 - **Run it:** Open `example.qmd` in RStudio and click "Render" (or run `quarto::quarto_render("example.qmd")`).
-- **Features:** Simulates a Birth-Death process and a Lotka-Volterra predator-prey system with graphs and mean-field comparisons.
+- **Features:** Simulates the Birth-Death process, the Lotka-Volterra predator-prey system, and SIS Infectious Disease dynamics exactly as referenced in the JSF official documentation.
 
 ### 2. Medium Test: `jsfR` Package
 
