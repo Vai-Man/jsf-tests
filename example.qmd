@@ -234,7 +234,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-## 4. From Python to R — the `jsfR` Package
+## 4. Bridging Python and R with the `jsfR` Package
 
 The three simulations above call the Python `jsf` package directly. The companion **`jsfR`** R package wraps this same interface natively, so users never need to write Python themselves.
 

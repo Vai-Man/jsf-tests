@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Vaibhav Manihar">
-<meta name="dcterms.date" content="2026-03-21">
+<meta name="dcterms.date" content="2026-03-24">
 
 <title>Jump-Switch-Flow (JSF) Demonstration</title>
 <style>
@@ -129,6 +129,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#configuration-simulation" id="toc-configuration-simulation" class="nav-link" data-scroll-target="#configuration-simulation">Configuration &amp; Simulation</a></li>
   </ul></li>
+  <li><a href="#bridging-python-and-r-with-the-jsfr-package" id="toc-bridging-python-and-r-with-the-jsfr-package" class="nav-link" data-scroll-target="#bridging-python-and-r-with-the-jsfr-package">4. Bridging Python and R with the <code>jsfR</code> Package</a></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   </ul>
 </nav>
@@ -155,7 +156,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">March 21, 2026</p>
+      <p class="date">March 24, 2026</p>
     </div>
   </div>
   
@@ -178,7 +179,7 @@ window.Quarto = {
 <p>This tests the fundamental architecture of the jump-switch mechanism across a single stochastic threshold.</p>
 <section id="configuration" class="level3">
 <h3 class="anchored" data-anchor-id="configuration">Configuration</h3>
-<div id="ea7aa931" class="cell" data-execution_count="1">
+<div id="0dbc1900" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -215,7 +216,7 @@ window.Quarto = {
 <section id="simulation-visualization" class="level3">
 <h3 class="anchored" data-anchor-id="simulation-visualization">Simulation &amp; Visualization</h3>
 <p>We simulate until <span class="math inline">\(t=6.0\)</span> to watch the trace confidently cross the threshold dividing the discrete (stochastic jumps) and continuous (smooth ODE) regimes.</p>
-<div id="3a4a6fbe" class="cell" data-execution_count="2">
+<div id="4ae5fdf0" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sim_bd <span class="op">=</span> jsf.jsf(x0_bd, rates_bd, stoich_bd, <span class="fl">6.0</span>, config<span class="op">=</span>my_opts_bd, method<span class="op">=</span><span class="st">"operator-splitting"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">4</span>))</span>
@@ -245,7 +246,7 @@ window.Quarto = {
 <section id="initialization" class="level3">
 <h3 class="anchored" data-anchor-id="initialization">1. Initialization</h3>
 <p>First, we set up our Python environment constraints exactly as defined in the official JSF docs.</p>
-<div id="3bfa4b8f" class="cell" data-execution_count="3">
+<div id="9634b610" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -281,7 +282,7 @@ window.Quarto = {
 <section id="configure-jsf-properties" class="level3">
 <h3 class="anchored" data-anchor-id="configure-jsf-properties">2. Configure JSF Properties</h3>
 <p>We construct the specific <code>stoich</code> and <code>my_opts</code> dictionaries required by the <code>jsf</code> underlying simulator. Note that <code>SwitchingThreshold</code> is set to <code>30</code> for both compartments to trigger the CTMC/ODE regime swap.</p>
-<div id="93f1632b" class="cell" data-execution_count="4">
+<div id="27063078" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>stoich <span class="op">=</span> {</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"nu"</span>: [ [a <span class="op">-</span> b <span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(r1, r2)] </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> r1, r2 <span class="kw">in</span> <span class="bu">zip</span>(product_matrix, reactant_matrix) ],</span>
@@ -300,7 +301,7 @@ window.Quarto = {
 <section id="simulate-and-visualize" class="level3">
 <h3 class="anchored" data-anchor-id="simulate-and-visualize">3. Simulate and Visualize</h3>
 <p>We execute the target <code>jsf.jsf</code> operator splitting method and plot using standard matplotlib structures mapped natively against the 30-population switching threshold boundary.</p>
-<div id="e244c59a" class="cell" data-execution_count="5">
+<div id="5a6de22d" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sim <span class="op">=</span> jsf.jsf(x0, rates, stoich, t_max, config<span class="op">=</span>my_opts, method<span class="op">=</span><span class="st">"operator-splitting"</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">5</span>))</span>
@@ -330,7 +331,7 @@ window.Quarto = {
 <p>We mathematically translate their SBML structure into a native Python dictionary simulation to capture its stochastic extinction dynamics. This represents the most critical use case for JSF: disease modeling near elimination boundaries where standard ODEs falsely predict continuous fractional infections instead of true stochastic extinction.</p>
 <section id="configuration-simulation" class="level3">
 <h3 class="anchored" data-anchor-id="configuration-simulation">Configuration &amp; Simulation</h3>
-<div id="cad5cf5b" class="cell" data-execution_count="6">
+<div id="dcc3293a" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -399,6 +400,41 @@ window.Quarto = {
 </div>
 </section>
 </section>
+<section id="bridging-python-and-r-with-the-jsfr-package" class="level2">
+<h2 class="anchored" data-anchor-id="bridging-python-and-r-with-the-jsfr-package">4. Bridging Python and R with the <code>jsfR</code> Package</h2>
+<p>The three simulations above call the Python <code>jsf</code> package directly. The companion <strong><code>jsfR</code></strong> R package wraps this same interface natively, so users never need to write Python themselves.</p>
+<p>The code below replicates the SIS model from Section 3 using the <code>jsfR::jsf_run()</code> function, which returns a typed <strong><code>JSFSimResult</code></strong> S7 object with built-in <code>print()</code> and <code>plot()</code> methods.</p>
+<pre class="{r}"><code>#| eval: false   # requires jsfR installed: devtools::load_all("jsfR")
+library(jsfR)
+
+rates_sis &lt;- function(x, t) c(0.002 * x[[1]] * x[[2]],   # Infection
+                               1.0   * x[[2]])             # Recovery
+
+stoich_sis &lt;- list(
+  nu         = list(c(-1L,  1L), c( 1L, -1L)),
+  DoDisc     = c(0L, 1L),
+  nuReactant = list(c(1L, 1L),   c(0L, 1L)),
+  nuProduct  = list(c(0L, 2L),   c(1L, 0L))
+)
+
+result &lt;- jsf_run(
+  x0                  = c(997L, 3L),
+  rates               = rates_sis,
+  stoich              = stoich_sis,
+  t_max               = 10.0,
+  switching_threshold = c(1000L, 15L),
+  enforce_do          = c(0L, 0L),
+  seed                = 1L,
+  compartment_names   = c("Susceptible", "Infected")
+)
+
+# S7 print method — per-compartment diagnostic summary
+print(result)
+
+# S7 plot method — ggplot2 time-series
+plot(result)</code></pre>
+<p>The <code>JSFSimResult</code> object carries the full simulation output alongside metadata (method, threshold, seed), making results self-describing and reproducible. This R-native interface is the core deliverable of the Medium test.</p>
+</section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <p>The Jump-Switch-Flow algorithm excels by intelligently balancing stochastic accuracy with deterministic computational speed. By setting specific <code>SwitchingThreshold</code> boundaries:</p>
@@ -406,6 +442,7 @@ window.Quarto = {
 <li><strong>Birth-Death:</strong> Demonstrates the fundamental ability of the algorithm to switch a single compartment’s simulation regime based on a single threshold.</li>
 <li><strong>Lotka-Volterra:</strong> Showcases JSF preserving crucial stochastic extinctions in multi-compartmental systems that mean-field ODEs would otherwise force into an impossible, infinite limit-cycle.</li>
 <li><strong>SIS Disease Dynamics:</strong> Utilizes JSF’s <code>DoDisc</code> vector to exclusively track the crucial “Infected” compartment discretely at low numbers, accurately capturing stochastic disease elimination without breaking the performance of macroscopic Susceptible flows.</li>
+<li><strong><code>jsfR</code> R Package:</strong> Wraps the Python interface in a typed S7 object system, giving R users a native, reproducible, self-describing API without writing a single line of Python.</li>
 </ul>
 </section>
 
