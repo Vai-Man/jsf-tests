@@ -5,8 +5,6 @@
 #'
 #' @keywords internal
 
-library(ggplot2)
-
 #' Custom theme for all plots
 #' @keywords internal
 theme_jsf <- function(base_size = 13) {
