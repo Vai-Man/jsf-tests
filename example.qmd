@@ -234,6 +234,46 @@ plt.tight_layout()
 plt.show()
 ```
 
+## 4. From Python to R — the `jsfR` Package
+
+The three simulations above call the Python `jsf` package directly. The companion **`jsfR`** R package wraps this same interface natively, so users never need to write Python themselves.
+
+The code below replicates the SIS model from Section 3 using the `jsfR::jsf_run()` function, which returns a typed **`JSFSimResult`** S7 object with built-in `print()` and `plot()` methods.
+
+```{r}
+#| eval: false   # requires jsfR installed: devtools::load_all("jsfR")
+library(jsfR)
+
+rates_sis <- function(x, t) c(0.002 * x[[1]] * x[[2]],   # Infection
+                               1.0   * x[[2]])             # Recovery
+
+stoich_sis <- list(
+  nu         = list(c(-1L,  1L), c( 1L, -1L)),
+  DoDisc     = c(0L, 1L),
+  nuReactant = list(c(1L, 1L),   c(0L, 1L)),
+  nuProduct  = list(c(0L, 2L),   c(1L, 0L))
+)
+
+result <- jsf_run(
+  x0                  = c(997L, 3L),
+  rates               = rates_sis,
+  stoich              = stoich_sis,
+  t_max               = 10.0,
+  switching_threshold = c(1000L, 15L),
+  enforce_do          = c(0L, 0L),
+  seed                = 1L,
+  compartment_names   = c("Susceptible", "Infected")
+)
+
+# S7 print method — per-compartment diagnostic summary
+print(result)
+
+# S7 plot method — ggplot2 time-series
+plot(result)
+```
+
+The `JSFSimResult` object carries the full simulation output alongside metadata (method, threshold, seed), making results self-describing and reproducible. This R-native interface is the core deliverable of the Medium test.
+
 ## Conclusion
 
 The Jump-Switch-Flow algorithm excels by intelligently balancing stochastic accuracy with deterministic computational speed. By setting specific `SwitchingThreshold` boundaries:
@@ -241,3 +281,4 @@ The Jump-Switch-Flow algorithm excels by intelligently balancing stochastic accu
 - **Birth-Death:** Demonstrates the fundamental ability of the algorithm to switch a single compartment's simulation regime based on a single threshold.
 - **Lotka-Volterra:** Showcases JSF preserving crucial stochastic extinctions in multi-compartmental systems that mean-field ODEs would otherwise force into an impossible, infinite limit-cycle.
 - **SIS Disease Dynamics:** Utilizes JSF's `DoDisc` vector to exclusively track the crucial "Infected" compartment discretely at low numbers, accurately capturing stochastic disease elimination without breaking the performance of macroscopic Susceptible flows.
+- **`jsfR` R Package:** Wraps the Python interface in a typed S7 object system, giving R users a native, reproducible, self-describing API without writing a single line of Python.
