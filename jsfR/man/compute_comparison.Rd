@@ -17,7 +17,5 @@ A data.frame with columns:
 \code{abs_error}, \code{rel_error}.
 }
 \description{
-Given two interpolated ensemble data.frames (columns: time, rep,
-population), this function computes time-wise mean trajectories
-and several error metrics.
+Compute comparison metrics between SSA and JSF ensembles
 }

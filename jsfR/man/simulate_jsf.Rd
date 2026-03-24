@@ -39,5 +39,5 @@ simulate_jsf(
 List with \code{compartments} and \code{times}.
 }
 \description{
-Wrapper around the Python \code{jsf.jsf()} function.
+Run a Jump-Switch-Flow simulation
 }

@@ -9,24 +9,24 @@
 #'
 #' @description
 #' A structured representation of a single Jump-Switch-Flow simulation run.
-#' Returned by [jsf_run()]. Supports `print()` for a tidy summary and
+#' Returned by `jsf_run()`. Supports `print()` for a tidy summary and
 #' `plot()` for a ggplot2 time-series visualisation.
 #'
-#' @slot compartments Named list of numeric vectors, one per compartment.
-#' @slot times        Numeric vector of simulation time points.
-#' @slot names        Character vector of compartment label names.
-#' @slot t_max        Numeric maximum simulation time.
-#' @slot call_info    Named character vector recording key simulation parameters.
+#' @slot compartments      Named list of numeric vectors, one per compartment.
+#' @slot times             Numeric vector of simulation time points.
+#' @slot compartment_names Character vector of compartment label names.
+#' @slot t_max             Numeric maximum simulation time.
+#' @slot call_info         Named character vector recording key simulation parameters.
 #'
 #' @export
 JSFSimResult <- S7::new_class(
   "JSFSimResult",
   properties = list(
-    compartments = S7::new_property(class = S7::class_list),
-    times        = S7::new_property(class = S7::class_numeric),
-    names        = S7::new_property(class = S7::class_character),
-    t_max        = S7::new_property(class = S7::class_numeric),
-    call_info    = S7::new_property(class = S7::class_character)
+    compartments      = S7::new_property(class = S7::class_list),
+    times             = S7::new_property(class = S7::class_numeric),
+    compartment_names = S7::new_property(class = S7::class_character),
+    t_max             = S7::new_property(class = S7::class_numeric),
+    call_info         = S7::new_property(class = S7::class_character)
   )
 )
 
@@ -105,11 +105,11 @@ jsf_run <- function(x0,
   )
 
   JSFSimResult(
-    compartments = named_compartments,
-    times        = raw$times,
-    names        = compartment_names,
-    t_max        = t_max,
-    call_info    = info
+    compartments      = named_compartments,
+    times             = raw$times,
+    compartment_names = compartment_names,
+    t_max             = t_max,
+    call_info         = info
   )
 }
 
@@ -124,7 +124,7 @@ print.JSFSimResult <- function(x, ...) {
   cli_line("  Time range: [%.3f, %.3f]  (%d steps)",
            min(x@times), max(x@times), length(x@times))
 
-  for (nm in x@names) {
+  for (nm in x@compartment_names) {
     vals <- x@compartments[[nm]]
     cat(sprintf("  %-20s  init=%6.1f  final=%6.1f  min=%6.1f  max=%6.1f\n",
                 nm, vals[1], vals[length(vals)], min(vals), max(vals)))
@@ -134,13 +134,13 @@ print.JSFSimResult <- function(x, ...) {
 
 #' @exportS3Method plot JSFSimResult
 plot.JSFSimResult <- function(x, ...) {
-  n <- length(x@names)
+  n  <- length(x@compartment_names)
 
   df <- do.call(rbind, lapply(seq_len(n), function(i) {
     data.frame(
       time        = x@times,
       population  = x@compartments[[i]],
-      compartment = x@names[i],
+      compartment = x@compartment_names[i],
       stringsAsFactors = FALSE
     )
   }))

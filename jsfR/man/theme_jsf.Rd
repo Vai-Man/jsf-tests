@@ -2,11 +2,17 @@
 % Please edit documentation in R/plots.R
 \name{theme_jsf}
 \alias{theme_jsf}
-\title{Custom theme for all plots}
+\title{Plotting functions for JSF simulation results}
 \usage{
 theme_jsf(base_size = 13)
 }
 \description{
-Custom theme for all plots
+Functions to visualize trajectories, error heatmaps, and error comparisons
+from JSF and SSA simulations.
 }
+\keyword{Custom}
+\keyword{all}
+\keyword{for}
 \keyword{internal}
+\keyword{plots}
+\keyword{theme}

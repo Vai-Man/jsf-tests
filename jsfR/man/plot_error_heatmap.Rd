@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plot_error_heatmap}
 \alias{plot_error_heatmap}
-\title{Sweep (λ, μ) and plot RMSE heat-map}
+\title{Sweep (lambda, mu) and plot RMSE heat-map}
 \usage{
 plot_error_heatmap(
   lambda_seq = seq(0.2, 2, by = 0.3),
@@ -15,9 +15,9 @@ plot_error_heatmap(
 )
 }
 \arguments{
-\item{lambda_seq}{Numeric vector of λ values.}
+\item{lambda_seq}{Numeric vector of lambda values.}
 
-\item{mu_seq}{Numeric vector of μ values.}
+\item{mu_seq}{Numeric vector of mu values.}
 
 \item{x0}{Initial population.}
 
@@ -33,5 +33,5 @@ plot_error_heatmap(
 A ggplot object (tile plot).
 }
 \description{
-Sweep (λ, μ) and plot RMSE heat-map
+Sweep (lambda, mu) and plot RMSE heat-map
 }

@@ -7,7 +7,7 @@
 jsf_available()
 }
 \value{
-TRUE if the module can be imported, otherwise FALSE.
+TRUE if jsf is available, FALSE otherwise.
 }
 \description{
 Check if the jsf Python module is available

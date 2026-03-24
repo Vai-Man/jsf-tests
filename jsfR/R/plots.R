@@ -86,7 +86,7 @@ plot_error_vs_time <- function(comp) {
     geom_area(fill = "#fc8d59", alpha = 0.35) +
     geom_line(colour = "#d73027", linewidth = 0.7) +
     labs(
-      title = "Absolute Error: |mean(JSF) − mean(SSA)| over Time",
+      title = "Absolute Error: |mean(JSF) - mean(SSA)| over Time",
       x     = "Time",
       y     = "Absolute error"
     ) +
@@ -95,10 +95,10 @@ plot_error_vs_time <- function(comp) {
 
 
 # Plot 3: Error heat-map over parameter space
-#' Sweep (λ, μ) and plot RMSE heat-map
+#' Sweep (lambda, mu) and plot RMSE heat-map
 #'
-#' @param lambda_seq Numeric vector of λ values.
-#' @param mu_seq     Numeric vector of μ values.
+#' @param lambda_seq Numeric vector of lambda values.
+#' @param mu_seq     Numeric vector of mu values.
 #' @param x0         Initial population.
 #' @param t_max      Simulation time.
 #' @param n_reps     Replicates per parameter pair.

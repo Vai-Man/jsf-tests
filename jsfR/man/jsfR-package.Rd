@@ -6,7 +6,8 @@
 \alias{jsfR-package}
 \title{jsfR: R Interface to the Jump-Switch-Flow Simulator}
 \description{
-R wrapper for the Python \code{jsf} package for simulating compartmental models.
+An R wrapper for the Python \code{jsf} package, providing functions to simulate
+and analyze compartmental models using the Jump-Switch-Flow method.
 }
 \seealso{
 Useful links:

@@ -21,7 +21,10 @@ Imports:
     S7 (>= 0.1.0),
     ggplot2
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
 Config/reticulate:
   list(
     packages = list(

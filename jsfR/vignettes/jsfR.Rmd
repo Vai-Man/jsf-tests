@@ -1,0 +1,227 @@
+---
+title: "Getting Started with jsfR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with jsfR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  eval      = FALSE   # Python jsf may not be available on all build machines
+)
+```
+
+## Overview
+
+The **jsfR** package provides an R interface to the Python
+[`jsf`](https://github.com/DGermano8/jsf) package using
+[`reticulate`](https://rstudio.github.io/reticulate/). It implements the
+**Jump-Switch-Flow (JSF)** algorithm — a hybrid stochastic-deterministic
+simulator for compartmental models.
+
+The core idea is simple: when a compartment's population is **large**, it is
+simulated via a fast deterministic ODE (mean-field). When it is **small**, it
+switches to an exact Continuous-Time Markov Chain (CTMC / Gillespie SSA). The
+switching happens automatically at a user-defined `SwitchingThreshold`,
+giving you the speed of ODEs and the accuracy of stochastic simulation exactly
+where it matters — near zero.
+
+```
+Population > Threshold  →  ODE (fast, deterministic)
+Population ≤ Threshold  →  CTMC (exact, stochastic)
+```
+
+This makes JSF particularly powerful in **infectious disease modelling**, where
+the number of infected individuals can drop near zero, and stochastic extinction
+events (i.e., disease elimination) are scientifically critical.
+
+---
+
+## Installation
+
+```{r install, eval = FALSE}
+# Install the package
+devtools::install_github("Vai-Man/jsf-tests", subdir = "jsfR")
+
+# Install the Python jsf dependency
+jsfR::install_jsf()
+```
+
+---
+
+## The `JSFSimResult` S7 Object
+
+All simulations in `jsfR` are run through `jsf_run()`, which returns a typed
+`JSFSimResult` S7 object. This object:
+
+- Stores compartment trajectories under **named** list entries
+- Records simulation metadata (`method`, `dt`, `SwitchingThreshold`, `seed`)
+- Provides a `print()` method for a tidy diagnostic summary
+- Provides a `plot()` method for a `ggplot2` time-series
+
+---
+
+## Example 1: Birth-Death Process
+
+The simplest compartmental model, a single population with birth rate
+$\lambda$ and death rate $\mu$.
+
+$$\frac{dN}{dt} = \lambda N - \mu N \qquad \implies \qquad E[N(t)] = N_0\, e^{(\lambda - \mu)t}$$
+
+Where:
+
+- $N$: Population size
+- $\lambda$: Birth rate
+- $\mu$: Death rate
+
+```{r birth-death}
+library(jsfR)
+
+rates_bd <- function(x, t) c(1.0 * x[[1]],   # birth
+                              0.5 * x[[1]])    # death
+
+stoich_bd <- list(
+  nu         = list(c(1L), c(-1L)),
+  DoDisc     = c(1L),
+  nuReactant = list(c(1L), c(1L)),
+  nuProduct  = list(c(2L), c(0L))
+)
+
+result_bd <- jsf_run(
+  x0                  = 5L,
+  rates               = rates_bd,
+  stoich              = stoich_bd,
+  t_max               = 6.0,
+  switching_threshold = 10L,
+  enforce_do          = 0L,
+  seed                = 42L,
+  compartment_names   = "Population"
+)
+```
+
+The `print()` method shows a per-compartment diagnostic summary:
+
+```{r print-bd}
+print(result_bd)
+#> JSFSimResult
+#>   Method    : operator-splitting
+#>   dt        : 0.01
+#>   Threshold : 10
+#>   Seed      : 42
+#>   Time range: [0.000, 6.000]  (547 steps)
+#>   Population             init=   5.0  final= 142.0  min=   3.0  max= 142.0
+```
+
+The `plot()` method returns a `ggplot2` object:
+
+```{r plot-bd}
+plot(result_bd)
+```
+
+---
+
+## Example 2: SIS Infectious Disease Model
+
+The SIS (Susceptible-Infected-Susceptible) model is the canonical use case for
+JSF, directly cited in the official package documentation. It models a disease
+that can eliminate stochastically when the infected count drops near zero —
+something deterministic ODEs cannot capture.
+
+The mathematical formulation for this model is:
+$$\frac{dS}{dt} = -\beta SI + \gamma I$$
+$$\frac{dI}{dt} = \beta SI - \gamma I$$
+
+Where:
+
+- $S$: Susceptible population size
+- $I$: Infected population size
+- $\beta$: Transmission rate
+- $\gamma$: Recovery rate
+
+We track `Infected` discretely (`DoDisc = c(0L, 1L)`) because extinction is
+only possible in the stochastic regime.
+
+```{r sis}
+rates_sis <- function(x, t) c(
+  0.002 * x[[1]] * x[[2]],   # S + I -> 2I  (infection)
+  1.0   * x[[2]]              # I -> S       (recovery)
+)
+
+stoich_sis <- list(
+  nu         = list(c(-1L,  1L), c( 1L, -1L)),
+  DoDisc     = c(0L, 1L),        # only Infected tracked stochastically
+  nuReactant = list(c(1L, 1L),   c(0L, 1L)),
+  nuProduct  = list(c(0L, 2L),   c(1L, 0L))
+)
+
+result_sis <- jsf_run(
+  x0                  = c(997L, 3L),
+  rates               = rates_sis,
+  stoich              = stoich_sis,
+  t_max               = 10.0,
+  switching_threshold = c(1000L, 15L),
+  enforce_do          = c(0L, 0L),
+  seed                = 1L,
+  compartment_names   = c("Susceptible", "Infected")
+)
+
+print(result_sis)
+plot(result_sis)
+```
+
+The `DoDisc` vector is the key control: `c(0L, 1L)` forces `Susceptible` into
+the fast ODE regime (it stays large) while keeping `Infected` stochastic at
+low counts. This is what allows the simulation to capture disease extinction
+accurately without sacrificing performance on the large `Susceptible` pool.
+
+---
+
+## Comparing SSA vs JSF
+
+`jsfR` also ships with a native R implementation of the **Gillespie SSA**
+(`simulate_birth_death()`) so you can compare both algorithms side-by-side.
+This is useful for validating that the hybrid JSF method matches the exact
+stochastic simulation in expectation.
+
+```{r compare}
+library(ggplot2)
+
+# Run 100 Gillespie SSA replicates
+ssa_raw  <- simulate_birth_death_ensemble(lambda = 1.0, mu = 0.5, x0 = 5L,
+                                          t_max = 6.0, n_reps = 100L, seed = 42L)
+
+# Run 100 JSF replicates
+jsf_raw  <- generate_jsf_reference(lambda = 1.0, mu = 0.5, x0 = 5L,
+                                    t_max = 6.0, n_reps = 100L, seed = 42L)
+
+# Interpolate to a common time grid and compute metrics
+ssa_grid <- interpolate_ensemble(ssa_raw)
+jsf_grid <- interpolate_ensemble(jsf_raw)
+comp     <- compute_comparison(ssa_grid, jsf_grid)
+
+print_comparison_summary(comp)
+#> SSA vs JSF Comparison Summary:
+#>   Time range         : [0.00, 6.00]
+#>   Mean absolute error: 3.1842
+#>   Max  absolute error: 38.6210
+#>   Mean relative error: 0.0793
+#>   RMSE               : 5.6091
+```
+
+Both methods agree closely in expectation, confirming that JSF is a valid
+approximation of the exact stochastic process while running significantly
+faster at high population levels.
+
+---
+
+## Further Reading
+
+- [JSF Python documentation](https://github.com/DGermano8/jsf)
+- [Jump-Switch-Flow paper (Germano et al.)](https://github.com/DGermano8/jsf)
+- `?jsf_run`: full API reference for the main simulation function
+- `?simulate_birth_death`: Gillespie SSA implementation
+- `?JSFSimResult`: S7 class reference

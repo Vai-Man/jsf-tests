@@ -25,6 +25,15 @@ Before simulating complex multi-species boundaries, we demonstrate the JSF proce
 
 This tests the fundamental architecture of the jump-switch mechanism across a single stochastic threshold.
 
+The mathematical formulation for this model is:
+$$ \frac{dN}{dt} = \lambda N - \mu N $$
+
+Where:
+
+- $N$: Population size
+- $\lambda$: Birth rate
+- $\mu$: Death rate
+
 ### Configuration
 
 ```{python}
@@ -87,6 +96,14 @@ We construct the classic predator-prey system to demonstrate the framework's abi
 The mathematical formulation for this model is:
 $$ \frac{\mathrm{d} V_1}{\mathrm{d} t} = \alpha V_1 - \beta V_1 V_2 $$
 $$ \frac{\mathrm{d} V_2}{\mathrm{d} t} = \beta V_1 V_2 - \gamma V_2 $$
+
+Where:
+
+- $V_1$: Prey population size
+- $V_2$: Predator population size
+- $\alpha$: Prey growth rate
+- $\beta$: Predation rate
+- $\gamma$: Predator death rate
 
 ### 1. Initialization
 
@@ -170,6 +187,17 @@ plt.show()
 The JSF documentation explicitly cites the **SIS (Susceptible-Infected-Susceptible) model** as its primary epidemiological example, defining it via an SBML file representation. 
 
 We mathematically translate their SBML structure into a native Python dictionary simulation to capture its stochastic extinction dynamics. This represents the most critical use case for JSF: disease modeling near elimination boundaries where standard ODEs falsely predict continuous fractional infections instead of true stochastic extinction.
+
+The mathematical formulation for this model is:
+$$ \frac{dS}{dt} = -\beta SI + \gamma I $$
+$$ \frac{dI}{dt} = \beta SI - \gamma I $$
+
+Where:
+
+- $S$: Susceptible population size
+- $I$: Infected population size
+- $\beta$: Transmission rate
+- $\gamma$: Recovery rate
 
 ### Configuration & Simulation
 

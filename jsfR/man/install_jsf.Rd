@@ -14,5 +14,5 @@ install_jsf(method = "auto", envname = NULL, jsf_path = NULL)
 \item{jsf_path}{Optional local path to the jsf package.}
 }
 \description{
-Installs the \code{jsf} Python package into the active Python environment.
+Install the Python jsf package
 }
