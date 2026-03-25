@@ -25,10 +25,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-Config/reticulate:
-  list(
-    packages = list(
-      list(package = "jsf", pip = TRUE)
-    )
-  )
 Config/testthat/edition: 3
